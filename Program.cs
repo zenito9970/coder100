@@ -90,7 +90,7 @@ class Program
             {
                 Console.Write("> ");
                 var prompt = Console.ReadLine();
-                if (prompt.StartsWith("/exit"))
+                if (prompt?.StartsWith("/exit") ?? true)
                 {
                     break;
                 }
@@ -143,7 +143,7 @@ class Program
                                     var content = Read(arg.Path);
                                     context.Add(ChatMessage.CreateToolMessage(toolCall.Id, content));
 
-                                    Console.ForegroundColor = ConsoleColor.Gray;
+                                    Console.ForegroundColor = ConsoleColor.DarkGray;
                                     Console.WriteLine(content);
                                     Console.ResetColor();
                                 }
@@ -155,7 +155,12 @@ class Program
                                 Console.WriteLine($"Write({arg?.Path ?? "null"})");
                                 if (arg != null)
                                 {
-                                    //
+                                    var msg = Write(arg.Path, arg.Content);
+                                    context.Add(ChatMessage.CreateToolMessage(toolCall.Id, msg));
+
+                                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                                    Console.WriteLine(msg);
+                                    Console.ResetColor();
                                 }
                                 break;
                             }
@@ -168,7 +173,7 @@ class Program
                                     var list = List(arg.Path);
                                     context.Add(ChatMessage.CreateToolMessage(toolCall.Id, list));
 
-                                    Console.ForegroundColor = ConsoleColor.Gray;
+                                    Console.ForegroundColor = ConsoleColor.DarkGray;
                                     Console.WriteLine(list);
                                     Console.ResetColor();
                                 }
@@ -208,7 +213,25 @@ class Program
 
     static string Write(string path, string content)
     {
-        return null;
+        try
+        {
+            Console.Write("allow? [y/N]: ");
+            var input = Console.ReadLine();
+            var allow = input?.ToLower().StartsWith('y') ?? false;
+            if (allow)
+            {
+                File.WriteAllText(path, content);
+                return "complete";
+            }
+            else
+            {
+                return "denied by user";
+            }
+        }
+        catch (Exception e)
+        {
+            return e.Message;
+        }
     }
 
     static string List(string path)
